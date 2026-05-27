@@ -1,0 +1,17 @@
+---
+import { getProjectsFromPocketBase } from '../../lib/pocketbase.js';
+
+const url = new URL(Astro.request.url);
+const page = parseInt(url.searchParams.get('page')) || 1;
+const category = url.searchParams.get('category') || '';
+
+const data = await getProjectsFromPocketBase({
+  category,
+  page,
+  perPage: 9
+});
+
+return new Response(JSON.stringify(data), {
+  headers: { 'Content-Type': 'application/json' }
+});
+---

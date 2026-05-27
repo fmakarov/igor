@@ -1,0 +1,191 @@
+---
+export const prerender = false;
+import Navigation from "../../components/Navigation.astro";
+import Layout from "../../layouts/Layout.astro";
+import { getProjectBySlug } from "../../lib/pocketbase.js";
+
+const { slug } = Astro.params;
+const project = await getProjectBySlug(slug);
+
+if (!project) {
+    return Astro.redirect("/404");
+}
+const baseUrl = "http://127.0.0.1:8090";
+const coverUrl = `http://127.0.0.1:8090/api/files/${project.collectionId}/${project.id}/${project.cover}`;
+const pdfUrl = project.pdf ? `${baseUrl}/api/files/${project.collectionId}/${project.id}/${project.pdf}` : null;
+---
+
+<Layout title={`${project.title} | Портфолио`}>
+    <Navigation />
+
+    <article class="max-w-6xl mx-auto px-6 pt-12 pb-24">
+        <!-- Cover -->
+        <div
+            onclick="openLightbox(0)"
+            class="rounded-3xl overflow-hidden mb-12 cursor-pointer"
+        >
+            <img src={coverUrl} alt={project.title} class="w-full" />
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div class="lg:col-span-5">
+                <div class="sticky top-28">
+                    <span
+                        class="px-4 py-2 bg-violet-100 dark:bg-violet-950 text-violet-700 rounded-full text-sm font-medium"
+                    >
+                        {project.category}
+                    </span>
+                    <h1
+                        class="text-4xl md:text-5xl font-display tracking-tighter font-semibold mt-6 mb-4"
+                    >
+                        {project.title}
+                    </h1>
+
+                    <!-- Кнопка просмотра PDF -->
+                    {
+                        pdfUrl && (
+                            <button
+                                onclick="openPdfViewer()"
+                                class="mt-10 w-full bg-black text-white py-4 rounded-2xl font-medium hover:bg-violet-600 transition flex items-center justify-center gap-3 text-lg"
+                            >
+                                📖 Открыть PDF презентацию
+                            </button>
+                        )
+                    }
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 prose dark:prose-invert text-lg">
+                {project.description}
+            </div>
+        </div>
+
+        <!-- Галерея изображений -->
+        <div class="mt-16">
+            <h3 class="font-display text-2xl font-semibold mb-8">Галерея</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {
+                    project.images?.map((img, index) => {
+                        const imgUrl = `${baseUrl}/api/files/${project.collectionId}/${project.id}/${img}`;
+                        return (
+                            <div
+                                onclick={`openLightbox(${index + 1})`}
+                                class="rounded-3xl overflow-hidden cursor-pointer hover:ring-4 hover:ring-violet-200"
+                            >
+                                <img src={imgUrl} class="w-full" alt="" />
+                            </div>
+                        );
+                    })
+                }
+            </div>
+        </div>
+    </article>
+
+    <!-- Lightbox для фото -->
+    <div
+        id="lightbox"
+        class="hidden fixed inset-0 bg-black/95 z-[100] flex items-center justify-center"
+    >
+        <button
+            onclick="closeLightbox()"
+            class="absolute top-6 right-6 text-white text-5xl">×</button
+        >
+        <button
+            onclick="prevImage()"
+            class="absolute left-8 text-white text-6xl">‹</button
+        >
+        <button
+            onclick="nextImage()"
+            class="absolute right-8 text-white text-6xl">›</button
+        >
+        <img
+            id="lightbox-image"
+            src=""
+            class="max-h-[92vh] max-w-[92vw] object-contain"
+        />
+        <div id="lightbox-counter" class="absolute bottom-8 text-white/70">
+        </div>
+    </div>
+
+    <!-- PDF Viewer (улучшенный) -->
+    {
+        pdfUrl && (
+            <div
+                id="pdf-viewer"
+                class="hidden fixed inset-0 bg-zinc-950 z-[200] flex flex-col"
+            >
+                <div class="p-5 border-b border-zinc-800 flex justify-between items-center bg-zinc-900">
+                    <h3 class="text-white font-medium text-lg">
+                        Презентация — {project.title}
+                    </h3>
+                    <button
+                        onclick="closePdfViewer()"
+                        class="text-white text-4xl leading-none hover:text-red-400"
+                    >
+                        ×
+                    </button>
+                </div>
+                <iframe
+                    id="pdf-frame"
+                    src={pdfUrl}
+                    class="flex-1 w-full bg-white"
+                    frameborder="0"
+                />
+            </div>
+        )
+    }
+
+    <script>
+        // Lightbox functions
+        let currentImages = [];
+        let currentIndex = 0;
+
+        window.openLightbox = function (startIndex) {
+            currentImages = Array.from(
+                document.querySelectorAll("article img"),
+            ).map((img) => img.src);
+            currentIndex = startIndex;
+            document.getElementById("lightbox").classList.remove("hidden");
+            showCurrentImage();
+        };
+
+        window.closeLightbox = function () {
+            document.getElementById("lightbox").classList.add("hidden");
+        };
+
+        function showCurrentImage() {
+            document.getElementById("lightbox-image").src =
+                currentImages[currentIndex];
+            document.getElementById("lightbox-counter").textContent =
+                `${currentIndex + 1} / ${currentImages.length}`;
+        }
+
+        window.nextImage = function () {
+            currentIndex = (currentIndex + 1) % currentImages.length;
+            showCurrentImage();
+        };
+        window.prevImage = function () {
+            currentIndex =
+                (currentIndex - 1 + currentImages.length) %
+                currentImages.length;
+            showCurrentImage();
+        };
+
+        // PDF Viewer
+        window.openPdfViewer = function () {
+            document.getElementById("pdf-viewer").classList.remove("hidden");
+        };
+
+        window.closePdfViewer = function () {
+            document.getElementById("pdf-viewer").classList.add("hidden");
+        };
+
+        // ESC key support
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                closeLightbox();
+                closePdfViewer();
+            }
+        });
+    </script>
+</Layout>
