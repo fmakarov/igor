@@ -1,0 +1,100 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { getProjectsFromPocketBase } from '../lib/pocketbase.js';
+
+const allProjects = await getProjectsFromPocketBase({ perPage: 12 });
+const projects = allProjects.items;
+---
+
+<Layout title="Портфолио | Графический дизайнер">
+
+  <!-- Верхняя навигация -->
+  <nav class="sticky top-0 z-50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-lg border-b border-zinc-200 dark:border-zinc-800">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+      <h1 class="text-2xl font-bold tracking-tighter">IGOR LIVSCHITZ</h1>
+      
+      <div class="hidden md:flex items-center gap-x-8 text-sm font-medium">
+        <a href="/" class="hover:text-violet-600 transition-colors">Главная</a>
+        <a href="/works" class="hover:text-violet-600 transition-colors">Все работы</a>
+        <a href="/about" class="hover:text-violet-600 transition-colors">Обо мне</a>
+        <a href="/contact" class="hover:text-violet-600 transition-colors">Контакты</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Категории работ -->
+  <section class="max-w-7xl mx-auto px-6 pt-16 pb-10">
+    <div class="mb-8">
+      <h2 class="text-4xl font-semibold tracking-tight">Категории</h2>
+      <p class="text-zinc-600 dark:text-zinc-400 mt-2">Выберите направление, чтобы посмотреть работы</p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <!-- Брендинг -->
+      <a href="/category/branding" 
+         class="group bg-zinc-100 dark:bg-zinc-900 hover:bg-white dark:hover:bg-zinc-800 border border-transparent hover:border-violet-200 dark:hover:border-violet-900 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-2">
+        <div class="w-12 h-12 bg-violet-100 dark:bg-violet-950 text-violet-600 dark:text-violet-400 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+          ✦
+        </div>
+        <h3 class="text-2xl font-semibold mb-2">Брендинг</h3>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400">Айдентика, логотипы, фирменный стиль</p>
+      </a>
+
+      <!-- Иллюстрация -->
+      <a href="/category/illustration" 
+         class="group bg-zinc-100 dark:bg-zinc-900 hover:bg-white dark:hover:bg-zinc-800 border border-transparent hover:border-violet-200 dark:hover:border-violet-900 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-2">
+        <div class="w-12 h-12 bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+          ✎
+        </div>
+        <h3 class="text-2xl font-semibold mb-2">Иллюстрация</h3>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400">Цифровые и печатные иллюстрации</p>
+      </a>
+
+      <!-- UI/UX -->
+      <a href="/category/ui-ux" 
+         class="group bg-zinc-100 dark:bg-zinc-900 hover:bg-white dark:hover:bg-zinc-800 border border-transparent hover:border-violet-200 dark:hover:border-violet-900 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-2">
+        <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+          ◐
+        </div>
+        <h3 class="text-2xl font-semibold mb-2">UI/UX</h3>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400">Интерфейсы и цифровые продукты</p>
+      </a>
+
+      <!-- Упаковка -->
+      <a href="/category/packaging" 
+         class="group bg-zinc-100 dark:bg-zinc-900 hover:bg-white dark:hover:bg-zinc-800 border border-transparent hover:border-violet-200 dark:hover:border-violet-900 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-2">
+        <div class="w-12 h-12 bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+          📦
+        </div>
+        <h3 class="text-2xl font-semibold mb-2">Упаковка</h3>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400">Дизайн упаковки и этикеток</p>
+      </a>
+    </div>
+  </section>
+
+  <!-- Последние работы -->
+  <section class="max-w-7xl mx-auto px-6 pb-24">
+    <div class="flex items-end justify-between mb-10">
+      <h2 class="text-4xl font-semibold tracking-tight">Последние работы</h2>
+      <a href="/works" class="flex items-center gap-2 text-violet-600 hover:text-violet-700 font-medium transition-colors">
+        Все работы 
+        <span class="text-xl">→</span>
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {projects.map((project) => (
+        <ProjectCard project={project} />
+      ))}
+    </div>
+
+    {projects.length === 0 && (
+      <div class="text-center py-24 bg-zinc-50 dark:bg-zinc-900 rounded-3xl">
+        <p class="text-2xl text-zinc-400">Здесь пока пусто</p>
+        <p class="mt-3 text-zinc-500">Добавьте первые проекты в PocketBase</p>
+      </div>
+    )}
+  </section>
+
+</Layout>
